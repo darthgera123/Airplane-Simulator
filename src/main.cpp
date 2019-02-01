@@ -2,6 +2,7 @@
 #include "timer.h"
 #include "ball.h"
 #include "cone.h"
+#include "cylinder.h"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ GLFWwindow *window;
 
 Ball ball1;
 Cone cone;
+Cylinder cyl;
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
 
@@ -51,7 +53,8 @@ void draw() {
     // For each model you render, since the MVP will be different (at least the M part)
     // Don't change unless you are sure!!
     glm::mat4 MVP;  // MVP = Projection * View * Model
-    cone.draw(VP);
+    //cone.draw(VP);
+    cyl.draw(VP);
     // Scene render
     //ball1.draw(VP);
 }
@@ -77,6 +80,7 @@ void initGL(GLFWwindow *window, int width, int height) {
 
     //ball1       = Ball(0, 0, COLOR_RED);
     cone = Cone(0,0);
+    cyl = Cylinder(0,0);
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
     // Get a handle for our "MVP" uniform
