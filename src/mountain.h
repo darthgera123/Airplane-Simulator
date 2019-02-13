@@ -1,13 +1,13 @@
 #include "main.h"
 
-#ifndef CONE_H
-#define CONE_H
+#ifndef MOUNTAIN_H
+#define MOUNTAIN_H
 
 
-class Cone {
+class Mountain {
 public:
-    Cone() {}
-    Cone(float x, float y,float z);
+    Mountain() {}
+    Mountain(float x, float y,float z);
     glm::vec3 position;
     float rotation;
     void draw(glm::mat4 VP);
@@ -17,6 +17,7 @@ public:
 private:
     VAO *object;
     VAO *object_base;
+    VAO *object_top;
 };
 
 #endif // BALL_H
