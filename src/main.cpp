@@ -61,7 +61,7 @@ double GenerateRandom(double min, double max)
 }
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
-void collision(){
+void collision_ring(){
     vector<Rings>::iterator vit;
     glm::vec3 tail = airforce.position;
     tail.z = tail.z + airforce.radius*4;
@@ -83,6 +83,14 @@ void collision(){
             }
         }
     }  
+    
+}
+void generate_ring(){
+    
+        float x = GenerateRandom(-30,30);
+        float y = GenerateRandom(3,14);
+        float z = GenerateRandom(3,100);
+        smoke.push_back(Rings(x,y,z,10,0.05));
     
 }
 void draw() {
@@ -161,8 +169,7 @@ void draw() {
     // {
     //     mount[i].draw(VP);
     // }
-    ring.draw(VP);
-    collision();
+    collision_ring();
     for(int i=0;i<smoke.size();i++)
     {
         smoke[i].draw(VP);
@@ -333,13 +340,7 @@ void initGL(GLFWwindow *window, int width, int height) {
     
     ring = Rings(0,5,3,10,0.05);
     smoke.push_back(ring);
-    for(int i=0;i<0;i++)
-    {
-        float x = GenerateRandom(-30,30);
-        float y = GenerateRandom(3,14);
-        float z = GenerateRandom(3,100);
-        smoke.push_back(Rings(x,y,z,10,0.05));
-    }
+    
     
     dash_fuel = Dashboard(-3,-3,1,2);
     dash_stick_fuel = Dashsticks(-3,-3,dash_fuel.radius_rx,100,2);
