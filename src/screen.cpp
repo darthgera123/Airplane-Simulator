@@ -15,7 +15,7 @@ Screen::Screen(float x, float y, float z) {
         r,0.0f,-r,
         r,0.0f, r // triangle 2 : end
     };
-    this->object_clear = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, COLOR_FOREST, GL_FILL);
+    this->object_clear = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, COLOR_SEA, GL_FILL);
 }
 
 void Screen::draw(glm::mat4 VP) {

@@ -10,6 +10,7 @@ public:
     Airplane(float x, float y, float z);
     glm::vec3 position;
     glm::mat4 totalRot;
+    glm::mat4 totalUp;
     void draw(glm::mat4 VP);
     void set_position(float x, float y,float z);
     void tick();
@@ -26,8 +27,13 @@ public:
     float rotation_x;
     float rotation_y;
     float rotation_z;
+    float radius;
+    float fuel;
+    float score;
     glm::vec4 set_eye(glm::vec4 E);
     glm::vec4 set_speed(glm::vec4 S);
+    glm::vec4 set_top(glm::vec4 T);
+    glm::vec4 set_up(glm::vec4 U);
     void reset_rotation();
     
 private:
@@ -40,6 +46,7 @@ private:
     VAO *object_cone_base;
     VAO *object_wings;
     VAO *object_tail;
+    VAO *object_back;
 };
 
 #endif
