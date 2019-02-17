@@ -126,6 +126,7 @@ void draw() {
     target = airforce.position;
     // Compute Camera matrix (view)
     if(camera_flag==1){
+        //follow cam view
         glm::vec4 temp_eye = airforce.set_eye(eye_mov);
         glm::vec4 temp_tar = airforce.set_eye(tar_mov);
         glm::vec4 temp_up = airforce.set_up(up_mov);
@@ -135,6 +136,7 @@ void draw() {
         Matrices.view = glm::lookAt( E1, T1, up );
     }
     else if(camera_flag==2){
+        //top view
         glm::vec4 temp_eye = airforce.set_top(eye_mov);
         glm::vec4 temp_tar = airforce.set_top(tar_mov);
         glm::vec3 E1 = glm::vec3(temp_eye.x,temp_eye.y,temp_eye.z);
@@ -142,9 +144,11 @@ void draw() {
         Matrices.view = glm::lookAt( E1, T1, up );
     } 
     else if(camera_flag==3){
+        //tower view
         Matrices.view = glm::lookAt( eye, glm::vec3(0,0,0), up );
     }
     else if(camera_flag==4){
+        //first person view
         glm::vec4 temp_eye = airforce.set_eye(eye_mov);
         glm::vec4 temp_tar = airforce.set_eye(tar_mov);
         glm::vec4 temp_up = airforce.set_up(up_mov);
@@ -152,6 +156,19 @@ void draw() {
         glm::vec3 T1 = glm::vec3(temp_tar.x,temp_tar.y,temp_tar.z);
         glm::vec3 U1 = glm::vec3(temp_up.x,temp_up.y,temp_up.z);
         Matrices.view = glm::lookAt( E1, T1, U1 );
+    }
+    else if(camera_flag==5){
+        //helicopter view
+        int height,width;
+        glfwGetWindowSize(window,&height,&width);
+        double xpos,ypos;
+        glfwGetCursorPos(window,&xpos,&ypos);
+        double phi = 0.005 * (width/2-xpos);
+        double thetha = 0.005 * (height/2-ypos);
+        eye.x = airforce.position.x +3.0*cos(thetha)*sin(phi);
+        eye.y = airforce.position.y +3.0*sin(thetha);
+        eye.z = airforce.position.z +3.0*cos(phi)*cos(thetha);
+        Matrices.view = glm::lookAt(eye,glm::vec3(airforce.position),up);
     }
     MatricesDashboard.view = glm::lookAt(eyeScore,targetScore,upScore);
     // Rotating Camera for 3D
@@ -343,6 +360,7 @@ void tick_input(GLFWwindow *window) {
     int f = glfwGetKey(window, GLFW_KEY_F);
     int h = glfwGetKey(window, GLFW_KEY_H);
     int m = glfwGetKey(window, GLFW_KEY_M);
+    int n = glfwGetKey(window, GLFW_KEY_N);
     if (left) {
        airforce.move_left();
     }
@@ -437,6 +455,14 @@ void tick_input(GLFWwindow *window) {
         e3=4*airforce.radius;
         tz = e3 + 0.01;
         camera_flag = 4;
+    }
+    if(n){
+        // e1=0;
+        // e2=0;
+        // e3=4*airforce.radius;
+        // tz = e3 + 0.01;
+        // 
+        camera_flag = 5;
     }
     if(h){
         bomb.push_back(Bomb(airforce.position.x,airforce.position.y-1.2*airforce.radius,airforce.position.z));
