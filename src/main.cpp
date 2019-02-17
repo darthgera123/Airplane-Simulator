@@ -10,6 +10,10 @@
 #include "rings.h"
 #include "dashboard.h"
 #include "dash_stick.h"
+#include "missile.h"
+#include "bomb.h"
+#include "fuel.h"
+#include "parachute.h"
 
 using namespace std;
 
@@ -28,11 +32,16 @@ Screen forest;
 Airplane airforce;
 Mountain mt;
 Shooter shoot;
-Rings ring;
+
 vector<Rings>smoke;
 Dashboard dash_fuel,dash_altitude;
 Dashsticks dash_stick_fuel,dash_stick_altitude;
 vector<Mountain> mount;
+vector<Missile> missile;
+vector<Bomb> bomb;
+vector<Fuel> fuel;
+vector<Parachute> para;
+bounding_box_t airplane_box;
 // follow camera = 1, top view =2, tower view = 3
 int camera_flag = 1;
 float e1,e2,e3;
@@ -142,7 +151,6 @@ void draw() {
         glm::vec3 E1 = glm::vec3(temp_eye.x,temp_eye.y,temp_eye.z);
         glm::vec3 T1 = glm::vec3(temp_tar.x,temp_tar.y,temp_tar.z);
         glm::vec3 U1 = glm::vec3(temp_up.x,temp_up.y,temp_up.z);
-        cout<<temp_up.x<<" "<<temp_up.y<<" "<<temp_up.z<<endl;
         Matrices.view = glm::lookAt( E1, T1, U1 );
     }
     MatricesDashboard.view = glm::lookAt(eyeScore,targetScore,upScore);
@@ -163,6 +171,29 @@ void draw() {
     mt.draw(VP);
     glm::vec3 shootpos = glm::vec3(airforce.position.x - shoot.position.x,airforce.position.y - shoot.position.y,airforce.position.z - shoot.position.z);
     shoot.draw(shootpos,VP);
+    airplane_box.x = airforce.position.x;
+    airplane_box.y = airforce.position.y;
+    airplane_box.z = airforce.position.z;
+    vector<Fuel>::iterator fit;
+    for(fit=fuel.begin();fit!=fuel.end();fit++)
+    {
+        bounding_box_t temp;
+        temp.height = fit->height;
+        temp.width = fit->width;
+        temp.depth = fit->depth;
+        temp.x = fit->position.x;
+        temp.y = fit->position.y;
+        temp.z = fit->position.z;
+        if(detect_collision(temp,airplane_box))
+        {
+            fuel.erase(fit);
+            fit--;
+            airforce.fuel += 5;
+            continue;
+        }
+        fit->draw(VP);
+    }
+    
     //cone.draw(VP);
     //cyl.draw(VP);
     // for(int i=0;i<mount.size();i++)
@@ -178,8 +209,99 @@ void draw() {
     speed.x = temp_speed.x;
     speed.y = temp_speed.y;
     speed.z = temp_speed.z;
-    airforce.draw(VP);
+    float unit = sqrt(pow(speed.x,2) + pow(speed.y,2) + pow(speed.z,2));
+    //divide by unit vector and multiply by 5
+    speed.x = (speed.x/unit) ;
+    speed.y = (speed.y/unit) ;
+    speed.z = (speed.z/unit) ;
     
+    airforce.draw(VP);
+    vector<Parachute>::iterator pit;
+    for(pit=para.begin();pit!=para.end();pit++)
+    {
+        bounding_box_t temp;
+        temp.height = 2*pit->radius;
+        temp.width = 2*pit->radius;
+        temp.depth = 2*pit->radius;
+        temp.x = pit->position.x;
+        temp.y = pit->position.y;
+        temp.z = pit->position.z;
+        if(pit->position.y < -5)
+        {
+            para.erase(pit);
+            pit--;
+            continue;
+        }
+        if(detect_collision(temp,airplane_box)){
+            airforce.health--;
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                airforce.set_position(0,0.5594,0.2999);
+            }
+            
+        }
+        //pit->fall_down();
+        pit->draw(VP);
+    }
+    vector<Missile>::iterator mit;
+    for(mit=missile.begin();mit!=missile.end();mit++){
+            mit->move_forward();
+            
+            bounding_box_t temp;
+            temp.height = 2*mit->radius;
+            temp.width = 2*mit->radius;
+            temp.depth = 6*mit->radius;
+            temp.x = mit->position.x;
+            temp.y = mit->position.y;
+            temp.z = mit->position.z;
+            int flag=1;
+            ///cout<<temp.x<<" "<<temp.y<<" "<<temp.z<<endl;
+            for(pit = para.begin();pit!=para.end();pit++)
+            {
+                bounding_box_t tempy;
+                tempy.height = 2*pit->radius;
+                tempy.width = 2*pit->radius;
+                tempy.depth = 2*pit->radius;
+                tempy.x = pit->position.x;
+                tempy.y = pit->position.y;
+                tempy.z = pit->position.z;
+                //cout<<tempy.x<<" "<<tempy.y<<" "<<tempy.z<<endl;
+                if(detect_collision(temp,tempy)){
+                    para.erase(pit);
+                    pit--;
+                    flag=0;
+                    break;
+                }
+            }
+                if(!flag){
+                    missile.erase(mit);
+                    mit--;
+                    continue;
+                }
+                float dis_x = airplane_box.x-temp.x;
+                float dis_y = airplane_box.y-temp.y;
+                float dis_z = airplane_box.z-temp.z;
+                float distance = sqrt(dis_x*dis_x+dis_y*dis_y+dis_z*dis_z);
+                if(distance >= 20)
+                {
+                    missile.erase(mit);
+                    mit--;
+                    continue;   
+                }
+                mit->draw(VP);
+            }
+            cout<<missile.size()<<endl;
+    
+
+   vector<Bomb>::iterator bit;
+   for(bit=bomb.begin();bit!=bomb.end();bit++){
+       bit->fall_down();
+       bit->draw(VP);
+   }
+
     dash_fuel.draw(VPScore);
     dash_stick_fuel.draw(VPScore);
     dash_altitude.draw(VPScore);
@@ -220,6 +342,7 @@ void tick_input(GLFWwindow *window) {
     int u = glfwGetKey(window, GLFW_KEY_U);
     int f = glfwGetKey(window, GLFW_KEY_F);
     int h = glfwGetKey(window, GLFW_KEY_H);
+    int m = glfwGetKey(window, GLFW_KEY_M);
     if (left) {
        airforce.move_left();
     }
@@ -227,9 +350,9 @@ void tick_input(GLFWwindow *window) {
       airforce.move_right();
     }
     if (up) {
-       airforce.position.x += speed.x;
-       airforce.position.y += speed.y;
-       airforce.position.z += speed.z;
+       airforce.position.x += speed.x*airforce.speed;
+       airforce.position.y += speed.y*airforce.speed;
+       airforce.position.z += speed.z*airforce.speed;
     }
     if (down) {
        airforce.fall();
@@ -242,6 +365,11 @@ void tick_input(GLFWwindow *window) {
             airforce.lift();
             airforce.dive_up();
         }
+    }
+    if(m){
+        
+        glm::vec3 missile_pos = glm::vec3(airforce.position.x,airforce.position.y - 1.2*airforce.radius,airforce.position.z);
+        missile.push_back(Missile(missile_pos.x,missile_pos.y,missile_pos.z,airforce.totalRot,glm::vec3(speed.x,speed.y,speed.z)));
     }
     if(l){
         airforce.tilt_left();
@@ -307,11 +435,11 @@ void tick_input(GLFWwindow *window) {
         e1=0;
         e2=0;
         e3=4*airforce.radius;
-        tz = e3 + 5;
+        tz = e3 + 0.01;
         camera_flag = 4;
     }
     if(h){
-        dash_stick_fuel.change_angle();
+        bomb.push_back(Bomb(airforce.position.x,airforce.position.y-1.2*airforce.radius,airforce.position.z));
     }
 }
 
@@ -331,22 +459,23 @@ void initGL(GLFWwindow *window, int width, int height) {
        u1=u3=0;
     u2=1;
     speed = glm::vec4(0,0,0.05,1);
-    //ball1       = Ball(0, 0, COLOR_RED);
-    cone = Cone(0,-1.5,1.6);
-    cyl = Cylinder(0,-1.5,0);
+
     airforce = Airplane(0,0.5594,0.2999);
+    airplane_box.depth = airforce.radius*6;
+    airplane_box.height = 2*airforce.radius;
+    airplane_box.width = 2*airforce.radius;
     forest = Screen(0,-5,0);
     mt = Mountain(0,-5,7,2,0.5);
-    
-    ring = Rings(0,5,3,10,0.05);
-    smoke.push_back(ring);
-    
+
+    smoke.push_back(Rings(0,5,3,10,0.05));
     
     dash_fuel = Dashboard(-3,-3,1,2);
     dash_stick_fuel = Dashsticks(-3,-3,dash_fuel.radius_rx,100,2);
     dash_altitude =  Dashboard(3,-3,1,1);
     dash_stick_altitude = Dashsticks(3,-3,dash_altitude.radius_rx,20,1);
     
+    //fuel.push_back(Fuel(3,3,3));
+    para.push_back(Parachute(3,3,3));
     shoot = Shooter(mt.position.x,mt.position.y+2*mt.height,mt.position.z,mt.radius,mt.height);
     // for(int i=0;i<5;i++){
     //     mount.push_back(Mountain(2*i,0,4));
@@ -404,7 +533,8 @@ int main(int argc, char **argv) {
 
 bool detect_collision(bounding_box_t a, bounding_box_t b) {
     return (abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-           (abs(a.y - b.y) * 2 < (a.height + b.height));
+           (abs(a.y - b.y) * 2 < (a.height + b.height)&& 
+           abs(a.z - b.z)*2 < (a.depth+b.depth));
 }
 
 void reset_screen() {

@@ -9,6 +9,8 @@ Airplane::Airplane(float x, float y,float z) {
     this->dir_rotation =0;
     this->totalRot = glm::mat4(1.0f);
     this->totalUp = glm::mat4(1.0f);
+    this->speed = 0.05;
+    this->health = 5;
 
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices

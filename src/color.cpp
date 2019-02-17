@@ -13,3 +13,6 @@ const color_t COLOR_SEA = {0,105,148};
 const color_t COLOR_SMOKE = {128,128,128};
 const color_t COLOR_NEON = {57,255,20};
 const color_t COLOR_NEON_YELLOW = {204,255,0};
+const color_t COLOR_RUBY = {224,17,95};
+const color_t COLOR_HOT_RED = {149,43,50};
+const color_t COLOR_PURPLE = {186,85,211};

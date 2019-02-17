@@ -67,8 +67,10 @@ enum direction_t { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT };
 struct bounding_box_t {
     float x;
     float y;
+    float z;
     float width;
     float height;
+    float depth;
 };
 
 bool detect_collision(bounding_box_t a, bounding_box_t b);
@@ -88,4 +90,7 @@ extern const color_t COLOR_SEA;
 extern const color_t COLOR_SMOKE;
 extern const color_t COLOR_NEON;
 extern const color_t COLOR_NEON_YELLOW;
+extern const color_t COLOR_RUBY;
+extern const color_t COLOR_HOT_RED;
+extern const color_t COLOR_PURPLE;
 #endif

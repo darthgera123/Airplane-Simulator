@@ -30,6 +30,8 @@ public:
     float radius;
     float fuel;
     float score;
+    float speed;
+    int health;
     glm::vec4 set_eye(glm::vec4 E);
     glm::vec4 set_speed(glm::vec4 S);
     glm::vec4 set_top(glm::vec4 T);
