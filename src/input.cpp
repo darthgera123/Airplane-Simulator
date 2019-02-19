@@ -16,7 +16,7 @@
 bool   cannon_keyboard_input = true;
 bool   drag_pan = false, old_cki;
 double drag_oldx = -1, drag_oldy = -1;
-
+float gscroll=0;
 using namespace std;
 
 /* Executed when a regular key is pressed/released/held-down */
@@ -84,4 +84,12 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     // Do something
+    gscroll += 0.01*yoffset;
+    reset_screen();
+}
+float return_gscroll(){
+    return gscroll;
+}
+void set_gscroll(){
+    gscroll =0;
 }

@@ -19,7 +19,7 @@ struct color_t {
     int g;
     int b;
 };
-
+//float gscroll;
 // nonedit.cpp
 GLFWwindow *initGLFW(int width, int height);
 GLuint     LoadShaders(const char *vertex_file_path, const char *fragment_file_path);
@@ -33,6 +33,8 @@ void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
 void keyboardChar(GLFWwindow *window, unsigned int key);
 void mouseButton(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+float return_gscroll();
+void set_gscroll();
 
 // other_handlers.cpp
 void error_callback(int error, const char *description);
@@ -93,4 +95,5 @@ extern const color_t COLOR_NEON_YELLOW;
 extern const color_t COLOR_RUBY;
 extern const color_t COLOR_HOT_RED;
 extern const color_t COLOR_PURPLE;
+extern const color_t COLOR_BRIGHT_RED;
 #endif

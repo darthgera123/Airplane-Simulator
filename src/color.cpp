@@ -16,3 +16,4 @@ const color_t COLOR_NEON_YELLOW = {204,255,0};
 const color_t COLOR_RUBY = {224,17,95};
 const color_t COLOR_HOT_RED = {149,43,50};
 const color_t COLOR_PURPLE = {186,85,211};
+const color_t COLOR_BRIGHT_RED = {255,0,0};

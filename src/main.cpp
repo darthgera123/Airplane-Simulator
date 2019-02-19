@@ -14,10 +14,15 @@
 #include "bomb.h"
 #include "fuel.h"
 #include "parachute.h"
+#include "cannon.h"
+#include "island.h"
+#include "arrow.h"
+#include "compass.h"
+#include "comp_stick.h"
 
 using namespace std;
 
-GLMatrices Matrices,MatricesDashboard;
+GLMatrices Matrices,MatricesDashboard,MatricesArrow;
 GLuint     programID;
 GLFWwindow *window;
 
@@ -25,35 +30,45 @@ GLFWwindow *window;
 * Customizable functions *
 **************************/
 glm::vec3 initEye;
-Ball ball1;
-Cone cone;
-Cylinder cyl;
 Screen forest;
 Airplane airforce;
-Mountain mt;
-Shooter shoot;
+Arrow arrow;
+Compass compass;
+Compsticks compstick;
+struct checkcoords{
+    float x;
+    float y;
+    float z;
+};
 
 vector<Rings>smoke;
 Dashboard dash_fuel,dash_altitude;
 Dashsticks dash_stick_fuel,dash_stick_altitude;
 vector<Mountain> mount;
+vector<Shooter> shoot;
+vector<Island> island;
 vector<Missile> missile;
 vector<Bomb> bomb;
 vector<Fuel> fuel;
 vector<Parachute> para;
+vector<Cannon> cannon;
+vector<checkcoords> checkpoint;
 bounding_box_t airplane_box;
-// follow camera = 1, top view =2, tower view = 3
+
 int camera_flag = 1;
 float e1,e2,e3;
 float tx,ty,tz;
 float u1,u2,u3;
+float epx,epy,epz;
 float temp_tx,temp_ty,temp_tz;
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
 glm::vec4 eye_mov;
 glm::vec4 tar_mov;
 glm::vec4 speed;
+
 Timer t60(1.0 / 60);
+float initialFoV = M_PI/2;
 double GenerateRandom(double min, double max)
 {
     static bool first = true;
@@ -70,6 +85,39 @@ double GenerateRandom(double min, double max)
 }
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
+void create_checkpoint(){
+    checkcoords c;
+    c.x = 10;
+    c.y =0.02;
+    c.z =10;
+    checkpoint.push_back(c);
+    c.x = 0;
+    c.y =0.02;
+    c.z =30*sqrt(3);
+    checkpoint.push_back(c);
+    c.x = -30;
+    c.y =0.02;
+    c.z =30;
+    checkpoint.push_back(c);
+}
+void drawCheckpoints(glm::mat4 VP){
+    // vector<Mountain>::iterator moit;
+    // for(moit=mount.begin();moit!=mount.end();moit++){
+    //     moit->draw(VP);
+    // }
+    // vector<Shooter>::iterator shit;
+    glm::vec3 shootpos = glm::vec3(airforce.position.x ,airforce.position.y ,airforce.position.z);
+    // for(shit=shoot.begin();shit!=shoot.end();shit++){
+    //     shit->draw(shootpos,VP);
+    // }
+    // vector<Island>::iterator isit;
+    // for(isit=island.begin();isit!=island.end();isit++){
+    //     isit->draw(VP);
+    // }
+    mount[0].draw(VP);
+    shoot[0].draw(shootpos,VP);
+    island[0].draw(VP);
+}
 void collision_ring(){
     vector<Rings>::iterator vit;
     glm::vec3 tail = airforce.position;
@@ -117,12 +165,15 @@ void draw() {
     //glm::vec3 eye(0,-2.5,2);
     glm::vec3 eye(e1,e2,e3);
     glm::vec3 eyeScore(0,0,1);
+    glm::vec3 eyePoint(epx,epy,epz);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
     glm::vec3 target (tx, ty, tz);
     glm::vec3 targetScore(0,0,0);
+    glm::vec3 targetPoint(0,0,0);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up (u1, u2, u3);
     glm::vec3 upScore(0,1,0);
+    glm::vec3 upPoint(0,1,0);
     target = airforce.position;
     // Compute Camera matrix (view)
     if(camera_flag==1){
@@ -169,8 +220,10 @@ void draw() {
         eye.y = airforce.position.y +3.0*sin(thetha);
         eye.z = airforce.position.z +3.0*cos(phi)*cos(thetha);
         Matrices.view = glm::lookAt(eye,glm::vec3(airforce.position),up);
+
     }
     MatricesDashboard.view = glm::lookAt(eyeScore,targetScore,upScore);
+    MatricesArrow.view = glm::lookAt(eyePoint,targetPoint,upPoint);
     // Rotating Camera for 3D
     // Don't change unless you are sure!!
     // Matrices.view = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)); // Fixed camera for 2D (ortho) in XY plane
@@ -184,13 +237,42 @@ void draw() {
     // Don't change unless you are sure!!
     glm::mat4 MVP;  // MVP = Projection * View * Model
     glm::mat4 MVPScore;
+    
+    
+    arrow.draw(VP);
     forest.draw(VP);
-    mt.draw(VP);
-    glm::vec3 shootpos = glm::vec3(airforce.position.x - shoot.position.x,airforce.position.y - shoot.position.y,airforce.position.z - shoot.position.z);
-    shoot.draw(shootpos,VP);
+    drawCheckpoints(VP);
     airplane_box.x = airforce.position.x;
     airplane_box.y = airforce.position.y;
     airplane_box.z = airforce.position.z;
+    vector<Cannon>::iterator cit;
+    for(cit = cannon.begin();cit!=cannon.end();cit++)
+    {
+        bounding_box_t temp;
+        temp.height =2*cit->radius;
+        temp.width = 2*cit->radius;
+        temp.depth = 2*cit->radius;
+        temp.x = cit->position.x;
+        temp.y = cit->position.y;
+        temp.z = cit->position.z;
+        if(detect_collision(airplane_box,temp)){
+            airforce.health--;
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                airforce.set_position(0,0.5594,0.2999);
+                cannon.erase(cit);
+                cit--;
+            }
+        }
+        else{
+            cit->move();
+            cit->draw(VP);
+        }
+    }
+    
     vector<Fuel>::iterator fit;
     for(fit=fuel.begin();fit!=fuel.end();fit++)
     {
@@ -210,13 +292,6 @@ void draw() {
         }
         fit->draw(VP);
     }
-    
-    //cone.draw(VP);
-    //cyl.draw(VP);
-    // for(int i=0;i<mount.size();i++)
-    // {
-    //     mount[i].draw(VP);
-    // }
     collision_ring();
     for(int i=0;i<smoke.size();i++)
     {
@@ -310,7 +385,7 @@ void draw() {
                 }
                 mit->draw(VP);
             }
-            cout<<missile.size()<<endl;
+            //cout<<missile.size()<<endl;
     
 
    vector<Bomb>::iterator bit;
@@ -325,14 +400,10 @@ void draw() {
     dash_stick_altitude.curr_value = airforce.position.y+4;
     //cout<<dash_stick_altitude.curr_value<<endl;
     dash_stick_altitude.draw(VPScore);
-    
+    compass.draw(VPScore);
+    compstick.draw(VPScore);
     
     airforce.reset_rotation();
-    //dash.set_position(e1,e2,e3);
-    //eye_mov = glm::vec4(initEye,1);
-    //cout<<"e1 "<<e1<<" e2 "<<e2<<" e3 "<<e3<<endl;
-    // Scene render
-    //ball1.draw(VP);
     
 }
 
@@ -353,19 +424,21 @@ void tick_input(GLFWwindow *window) {
     int z = glfwGetKey(window, GLFW_KEY_Z);
     int e = glfwGetKey(window, GLFW_KEY_E);
     int c = glfwGetKey(window, GLFW_KEY_C);
-    int r = glfwGetKey(window, GLFW_KEY_R);
-    int y = glfwGetKey(window, GLFW_KEY_Y);
-    int t = glfwGetKey(window, GLFW_KEY_T);
-    int u = glfwGetKey(window, GLFW_KEY_U);
+    int r = glfwGetKey(window, GLFW_KEY_1);
+    int y = glfwGetKey(window, GLFW_KEY_2);
+    int t = glfwGetKey(window, GLFW_KEY_3);
+    int u = glfwGetKey(window, GLFW_KEY_4);
     int f = glfwGetKey(window, GLFW_KEY_F);
     int h = glfwGetKey(window, GLFW_KEY_H);
     int m = glfwGetKey(window, GLFW_KEY_M);
-    int n = glfwGetKey(window, GLFW_KEY_N);
+    int n = glfwGetKey(window, GLFW_KEY_5);
     if (left) {
        airforce.move_left();
+       compstick.rotation += 0.60;
     }
     if (right) {
       airforce.move_right();
+      compstick.rotation -= 0.60;
     }
     if (up) {
        airforce.position.x += speed.x*airforce.speed;
@@ -418,7 +491,8 @@ void tick_input(GLFWwindow *window) {
         e3 += 0.01;
     }   
     if(e){
-        e3 -= 0.01;
+         e3 -= 0.01;
+        
     }
     //follow the camera view from ass
     if (r) {
@@ -484,6 +558,9 @@ void initGL(GLFWwindow *window, int width, int height) {
        tx=ty=tz=0;
        u1=u3=0;
     u2=1;
+    epx = 2.0;
+    epy = 0;
+    epz = -1.49;
     speed = glm::vec4(0,0,0.05,1);
 
     airforce = Airplane(0,0.5594,0.2999);
@@ -491,18 +568,33 @@ void initGL(GLFWwindow *window, int width, int height) {
     airplane_box.height = 2*airforce.radius;
     airplane_box.width = 2*airforce.radius;
     forest = Screen(0,-5,0);
-    mt = Mountain(0,-5,7,2,0.5);
-
+    create_checkpoint();
+    vector<checkcoords>::iterator chit;
+    for(chit=checkpoint.begin();chit!=checkpoint.end();chit++){
+        mount.push_back(Mountain(chit->x,chit->y-5,chit->z,2,0.5));
+        shoot.push_back(Shooter(chit->x,chit->y-3,chit->z,2,1.5));
+        island.push_back(Island(chit->x,chit->y-5-0.01,chit->z,5));
+    }
+    arrow = Arrow(checkpoint[0].x,checkpoint[0].y+5,checkpoint[0].z);
     smoke.push_back(Rings(0,5,3,10,0.05));
     
     dash_fuel = Dashboard(-3,-3,1,2);
     dash_stick_fuel = Dashsticks(-3,-3,dash_fuel.radius_rx,100,2);
     dash_altitude =  Dashboard(3,-3,1,1);
     dash_stick_altitude = Dashsticks(3,-3,dash_altitude.radius_rx,20,1);
-    
+    compass =Compass(0,-3,1);
+    compstick = Compsticks(0,-3,0.4);
     //fuel.push_back(Fuel(3,3,3));
     para.push_back(Parachute(3,3,3));
-    shoot = Shooter(mt.position.x,mt.position.y+2*mt.height,mt.position.z,mt.radius,mt.height);
+    
+    cannon.push_back(Cannon(shoot[0].position.x,shoot[0].position.y,shoot[0].position.z));
+    glm::vec3 dir;
+    dir = glm::vec3(airforce.position.x - shoot[0].position.x,airforce.position.y - shoot[0].position.y,airforce.position.z - shoot[0].position.z);
+    float mag = sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+    dir.x /= mag;
+    dir.y /= mag;
+    dir.z /= mag;
+    cannon[0].set_dir(dir);
     // for(int i=0;i<5;i++){
     //     mount.push_back(Mountain(2*i,0,4));
     // }
@@ -568,8 +660,15 @@ void reset_screen() {
     float bottom = screen_center_y - 4 / screen_zoom;
     float left   = screen_center_x - 4 / screen_zoom;
     float right  = screen_center_x + 4 / screen_zoom;
-    float angle = M_PI/2;
+    if(camera_flag == 5){
+        float FoV = initialFoV - 5 * return_gscroll();
+        Matrices.projection = glm::perspective(FoV, 1.0f, 1.0f, 500.0f);
+        //set_gscroll();
+    }
+    else{
     // angle is field of view, aspect ratio, near and far
-    Matrices.projection = glm::perspective(angle, 1.0f, 1.0f, 500.0f);
+        Matrices.projection = glm::perspective(initialFoV, 1.0f, 1.0f, 500.0f);
+    }
     MatricesDashboard.projection = glm::ortho(left, right, bottom, top, 0.1f, 500.0f);
+    MatricesArrow.projection = glm::perspective(90.0f, 1.0f, 1.0f, 500.0f);
 }

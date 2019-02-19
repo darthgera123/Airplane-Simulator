@@ -9,6 +9,7 @@ public:
     Shooter() {}
     Shooter(float x, float y,float z,float r1,float h);
     glm::vec3 position;
+    glm::vec3 dir;
     float rotation;
     void draw(glm::vec3 t,glm::mat4 VP);
     void set_position(float x, float y);
