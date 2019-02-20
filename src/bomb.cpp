@@ -6,6 +6,7 @@ Bomb::Bomb(float x, float y, float z) {
     this->rotation = 0;
     float speed = 0.5;
     float h = 0.1;
+    this->depth = this->height = this->width = h/2;
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     static const GLfloat vertex_buffer_data[] = {

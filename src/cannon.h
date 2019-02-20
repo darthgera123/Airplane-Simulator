@@ -7,7 +7,7 @@
 class Cannon {
 public:
     Cannon() {}
-    Cannon(float x, float y,float z);
+    Cannon(float x, float y,float z,glm::vec3 dir);
     glm::vec3 position;
     glm::vec3 speed_dir;
     glm::mat4 rotation;

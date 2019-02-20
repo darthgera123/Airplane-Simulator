@@ -1,7 +1,7 @@
 #include "mountain.h"
 #include "main.h"
 
-Mountain::Mountain(float x, float y,float z,float r1,float h) {
+Mountain::Mountain(float x, float y,float z,float r1,float h,int type) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
     speed = 1;
@@ -74,10 +74,20 @@ Mountain::Mountain(float x, float y,float z,float r1,float h) {
     //black shooter on top
     
     
-    this->object = create3DObject(GL_TRIANGLES, 3*n, circle_vertex_buffer_data, COLOR_MT, GL_FILL);
-    this->object_base = create3DObject(GL_TRIANGLES, 3*n, base_vertex_buffer_data, COLOR_RED, GL_FILL);
-    this->object_top = create3DObject(GL_TRIANGLES, 3*n, tr1_vertex_buffer_data, COLOR_MT, GL_FILL);
-    this->object_second = create3DObject(GL_TRIANGLES, 3*n, tr2_vertex_buffer_data, COLOR_MT, GL_FILL);
+    
+    color_t reddy,second;
+    if(type==1){
+        reddy = COLOR_MT;
+        second = COLOR_RED;
+    }
+    else{
+        reddy = COLOR_BRIGHT_RED;
+        second = COLOR_NEON_YELLOW;
+    }
+    this->object_base = create3DObject(GL_TRIANGLES, 3*n, base_vertex_buffer_data, second, GL_FILL);
+    this->object = create3DObject(GL_TRIANGLES, 3*n, circle_vertex_buffer_data, reddy, GL_FILL);
+    this->object_top = create3DObject(GL_TRIANGLES, 3*n, tr1_vertex_buffer_data, reddy, GL_FILL);
+    this->object_second = create3DObject(GL_TRIANGLES, 3*n, tr2_vertex_buffer_data, reddy, GL_FILL);
     
 }
 

@@ -32,6 +32,7 @@ public:
     float score;
     float speed;
     int health;
+    int type;
     glm::vec4 set_eye(glm::vec4 E);
     glm::vec4 set_speed(glm::vec4 S);
     glm::vec4 set_top(glm::vec4 T);
@@ -44,6 +45,9 @@ private:
     VAO *object_rectangles;
     VAO *object_tr1;
     VAO *object_tr2;
+    VAO *object_danger_tr1;
+    VAO *object_danger_tr2;
+    VAO *object_danger_back;
     VAO *object_cone;
     VAO *object_cone_base;
     VAO *object_wings;

@@ -7,8 +7,8 @@ Shooter::Shooter(float x, float y,float z,float r1,float h) {
     speed = 1;
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
-    this->radius = r1;
-    double r=this->radius;
+    this->actual_radius = r1;
+    double r=this->actual_radius;
     this->position = glm::vec3(x, y, z);
     //this->platform_y = platform_y+0.45*r;
     //this->ceiling_y = ceiling_y-0.45*this->radius;
@@ -19,7 +19,9 @@ Shooter::Shooter(float x, float y,float z,float r1,float h) {
     int i;
     //black shooter on top
     float H = h/2;
-    float R = r/20;
+    float R = r/10;
+    this->radius =R;
+    this->height = H;
 	GLfloat shooter_circle_vertex_buffer_data[30*n];
     GLfloat shooter_tr1_vertex_buffer_data[30*n];
     for(i=0;i<n;i++)

@@ -1,7 +1,7 @@
 #include "cannon.h"
 #include "main.h"
 
-Cannon::Cannon(float x, float y,float z) {
+Cannon::Cannon(float x, float y,float z,glm::vec3 dir) {
     this->position = glm::vec3(x, y, z);
     //this->speed_dir = glm::vec3(speed_dir);
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
@@ -11,6 +11,7 @@ Cannon::Cannon(float x, float y,float z) {
     const double PI = 3.141592;
     int n = 50;
     this->speed = 0.1;
+    this->speed_dir =glm::vec3(dir);
     //black shooter on top
     int i;
 	GLfloat circle_vertex_buffer_data_cone[30*n];

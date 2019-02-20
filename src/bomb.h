@@ -15,6 +15,9 @@ public:
     void tick();
     double speed;
     void fall_down();
+    float height;
+    float width;
+    float depth;
 private:
     VAO *object;
 };

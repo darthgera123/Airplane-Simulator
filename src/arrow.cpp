@@ -135,8 +135,8 @@ void Arrow::draw(glm::mat4 VP) {
     
 }
 
-void Arrow::set_position(float x, float y) {
-    this->position = glm::vec3(x, y, 0);
+void Arrow::set_position(float x, float y,float z) {
+    this->position = glm::vec3(x, y, z);
 }
 
 void Arrow::tick() {

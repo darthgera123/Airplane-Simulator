@@ -16,6 +16,8 @@ public:
     void tick();
     float radius;
     double speed;
+    float height;
+    float actual_radius;
 private:
     VAO *object_shooter_base;
     VAO *object_shooter_top;

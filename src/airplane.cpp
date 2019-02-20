@@ -11,6 +11,7 @@ Airplane::Airplane(float x, float y,float z) {
     this->totalUp = glm::mat4(1.0f);
     this->speed = 0.05;
     this->health = 5;
+    this->type =1;
 
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
@@ -135,12 +136,23 @@ Airplane::Airplane(float x, float y,float z) {
         0.0f+0.25*r, 0.0f+r,r,
          // triangle 1 : end
     };
+    color_t body;
+    if(type==1){
+        body = COLOR_GOLD;
+    }
+    else{
+        body = COLOR_HOT_RED;
+    }
+    
     this->object_cone = create3DObject(GL_TRIANGLES, 3*n, circle_vertex_buffer_data_cone, COLOR_RED, GL_FILL);
     this->object_cone_base = create3DObject(GL_TRIANGLES, 3*n, base_vertex_buffer_data_cone, COLOR_GOLD, GL_FILL);  
     this->object_1 = create3DObject(GL_TRIANGLES, 3*n, circle_vertex_buffer_data, COLOR_GOLD, GL_FILL);
     this->object_2 = create3DObject(GL_TRIANGLES, 3*n, base_vertex_buffer_data, COLOR_GOLD, GL_FILL);
-    this->object_tr1 = create3DObject(GL_TRIANGLES, 3*n, tr1_vertex_buffer_data, COLOR_GOLD, GL_FILL);
-    this->object_tr2 = create3DObject(GL_TRIANGLES, 3*n, tr2_vertex_buffer_data, COLOR_GOLD, GL_FILL);
+    this->object_danger_back = create3DObject(GL_TRIANGLES, 3*n, circle_vertex_buffer_data, COLOR_HOT_RED, GL_FILL);
+    this->object_tr1 = create3DObject(GL_TRIANGLES, 3*n, tr1_vertex_buffer_data, body, GL_FILL);
+    this->object_tr2 = create3DObject(GL_TRIANGLES, 3*n, tr2_vertex_buffer_data, body, GL_FILL);
+    this->object_danger_tr1 = create3DObject(GL_TRIANGLES, 3*n, tr1_vertex_buffer_data, COLOR_HOT_RED, GL_FILL);
+    this->object_danger_tr2 = create3DObject(GL_TRIANGLES, 3*n, tr2_vertex_buffer_data, COLOR_HOT_RED, GL_FILL);
     this->object_wings = create3DObject(GL_TRIANGLES, 6, upper_vertex, COLOR_GREEN, GL_FILL);
     this->object_tail = create3DObject(GL_TRIANGLES, 3, new_vertex, COLOR_GREEN, GL_FILL);
     this->object_back = create3DObject(GL_TRIANGLES, 3*n,back_vertex_buffer_data_cone, COLOR_RED, GL_FILL);
@@ -158,15 +170,21 @@ void Airplane::draw(glm::mat4 VP) {
     Matrices.model *= (translate * this->totalRot);
     glm::mat4 MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(this->object_1);
     draw3DObject(this->object_2);
-    draw3DObject(this->object_tr1);
-    draw3DObject(this->object_tr2);
+    
+    if(this->type==1){
+        draw3DObject(this->object_tr1);
+        draw3DObject(this->object_tr2);
+        draw3DObject(this->object_1);
+    }else{
+        draw3DObject(this->object_danger_tr1);
+        draw3DObject(this->object_danger_tr2);
+        draw3DObject(this->object_danger_back);
+    }
     draw3DObject(this->object_cone);
     draw3DObject(this->object_cone_base);
     draw3DObject(this->object_wings);
     draw3DObject(this->object_tail);
-    //draw3DObject(this->object_back);
 }
 
 void Airplane::set_position(float x, float y,float z) {

@@ -19,6 +19,8 @@
 #include "arrow.h"
 #include "compass.h"
 #include "comp_stick.h"
+#include "segment.h"
+
 
 using namespace std;
 
@@ -53,13 +55,32 @@ vector<Fuel> fuel;
 vector<Parachute> para;
 vector<Cannon> cannon;
 vector<checkcoords> checkpoint;
+Mountain Volcano;
+Island Lava;
+Segment seg_ones,seg_tens,seg_hs,seg_st,seg_life;
+
 bounding_box_t airplane_box;
+bounding_box_t shoot_box;
+
+
+long int check_count=0;
+long int para_count=0;
+long int fuel_count=0;
+long int cannon_interval = 200;
+long int checkp =1;
+long int para_interval=100;
+long int fuel_interval =100;
+long int fuel_loss=1;
+long int smoke_count=0;
+long int smoke_interval=100;
+
 
 int camera_flag = 1;
 float e1,e2,e3;
 float tx,ty,tz;
 float u1,u2,u3;
 float epx,epy,epz;
+float spawnx,spawny,spawnz;
 float temp_tx,temp_ty,temp_tz;
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
@@ -83,37 +104,146 @@ double GenerateRandom(double min, double max)
     }
     return min + (double)rand() * (max - min) / (double)RAND_MAX;
 }
+void display_score(glm::mat4 VP){
+    int tStage = checkp;
+    long long int tScore = airforce.score;
+    int tScore_h = tScore/1000;
+    tScore %= 1000;
+    int tScore_t = tScore/100;
+    tScore %= 100;
+    int tScore_o = tScore/10;
+    tScore %= 10;
+    if(tScore_o==0)
+        seg_ones.draw_0(VP);
+    if(tScore_o==1)
+        seg_ones.draw_1(VP);
+    if(tScore_o==2)
+        seg_ones.draw_2(VP);
+    if(tScore_o==3)
+        seg_ones.draw_3(VP);
+    if(tScore_o==4)
+        seg_ones.draw_4(VP);
+    if(tScore_o==5)
+        seg_ones.draw_5(VP);
+    if(tScore_o==6)
+        seg_ones.draw_6(VP);
+    if(tScore_o==7)
+        seg_ones.draw_7(VP);
+    if(tScore_o==8)
+        seg_ones.draw_8(VP);
+    if(tScore_o==9)
+        seg_ones.draw_9(VP);
+    
+    if(tScore_t==0)
+        seg_tens.draw_0(VP);
+    if(tScore_t==1)
+        seg_tens.draw_1(VP);
+    if(tScore_t==2)
+        seg_tens.draw_2(VP);
+    if(tScore_t==3)
+        seg_tens.draw_3(VP);
+    if(tScore_t==4)
+        seg_tens.draw_4(VP);
+    if(tScore_t==5)
+        seg_tens.draw_5(VP);
+    if(tScore_t==6)
+        seg_tens.draw_6(VP);
+    if(tScore_t==7)
+        seg_tens.draw_7(VP);
+    if(tScore_t==8)
+        seg_tens.draw_8(VP);
+    if(tScore_t==9)
+        seg_tens.draw_9(VP);
+    
+    if(tScore_h==0)
+        seg_hs.draw_0(VP);
+    if(tScore_h==1)
+        seg_hs.draw_1(VP);
+    if(tScore_h==2)
+        seg_hs.draw_2(VP);
+    if(tScore_h==3)
+        seg_hs.draw_3(VP);
+    if(tScore_h==4)
+        seg_hs.draw_4(VP);
+    if(tScore_h==5)
+        seg_hs.draw_5(VP);
+    if(tScore_h==6)
+        seg_hs.draw_6(VP);
+    if(tScore_h==7)
+        seg_hs.draw_7(VP);
+    if(tScore_h==8)
+        seg_hs.draw_8(VP);
+    if(tScore_h==9)
+        seg_hs.draw_9(VP);
+    
+    if(tStage==0)
+        seg_st.draw_0(VP);
+    if(tStage==1)
+        seg_st.draw_1(VP);
+    if(tStage==2)
+        seg_st.draw_2(VP);
+    if(tStage==3)
+        seg_st.draw_3(VP);
+    if(tStage==4)
+        seg_st.draw_4(VP);
+    if(tStage==5)
+        seg_st.draw_5(VP);
+    if(tStage==6)
+        seg_st.draw_6(VP);
+    if(tStage==7)
+        seg_st.draw_7(VP);
+    if(tStage==8)
+        seg_st.draw_8(VP);
+    if(tStage==9)
+        seg_st.draw_9(VP);
+    
+    if(airforce.health==0)
+        seg_life.draw_0(VP);
+    if(airforce.health==1)
+        seg_life.draw_1(VP);
+    if(airforce.health==2)
+        seg_life.draw_2(VP);
+    if(airforce.health==3)
+        seg_life.draw_3(VP);
+    if(airforce.health==4)
+        seg_life.draw_4(VP);
+    if(airforce.health==5)
+        seg_life.draw_5(VP);
+    if(airforce.health==6)
+        seg_life.draw_6(VP);
+    if(airforce.health==7)
+        seg_life.draw_7(VP);
+    if(airforce.health==8)
+        seg_life.draw_8(VP);
+    if(airforce.health==9)
+        seg_life.draw_9(VP);
+}
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
+void respawn(){
+        airforce.set_position(spawnx,spawny,spawnz);
+        airforce.totalRot =glm::mat4(1.0f);
+        airforce.totalUp = glm::mat4(1.0f);
+        speed = glm::vec4(0,0,0.05,1);
+        airforce.fuel = 1000;
+}
 void create_checkpoint(){
     checkcoords c;
-    c.x = 10;
+    c.x = 15;
     c.y =0.02;
     c.z =10;
     checkpoint.push_back(c);
     c.x = 0;
     c.y =0.02;
-    c.z =30*sqrt(3);
+    c.z =17*sqrt(3);
     checkpoint.push_back(c);
-    c.x = -30;
+    c.x = -10;
     c.y =0.02;
-    c.z =30;
+    c.z =15;
     checkpoint.push_back(c);
 }
 void drawCheckpoints(glm::mat4 VP){
-    // vector<Mountain>::iterator moit;
-    // for(moit=mount.begin();moit!=mount.end();moit++){
-    //     moit->draw(VP);
-    // }
-    // vector<Shooter>::iterator shit;
     glm::vec3 shootpos = glm::vec3(airforce.position.x ,airforce.position.y ,airforce.position.z);
-    // for(shit=shoot.begin();shit!=shoot.end();shit++){
-    //     shit->draw(shootpos,VP);
-    // }
-    // vector<Island>::iterator isit;
-    // for(isit=island.begin();isit!=island.end();isit++){
-    //     isit->draw(VP);
-    // }
     mount[0].draw(VP);
     shoot[0].draw(shootpos,VP);
     island[0].draw(VP);
@@ -134,7 +264,7 @@ void collision_ring(){
             if(in <=radius)
             {
                 cout<<"Collide"<<endl;
-                airforce.score += 10;
+                airforce.score += 50;
                 smoke.erase(vit);
                 vit--;
             }
@@ -144,11 +274,99 @@ void collision_ring(){
 }
 void generate_ring(){
     
-        float x = GenerateRandom(-30,30);
-        float y = GenerateRandom(3,14);
-        float z = GenerateRandom(3,100);
+        float x = GenerateRandom(-15,15);
+        float y = GenerateRandom(3,7);
+        float z = GenerateRandom(-10,10);
         smoke.push_back(Rings(x,y,z,10,0.05));
     
+}
+void collision_cannon(glm::mat4 VP){
+    vector<Cannon>::iterator cit;
+    for(cit = cannon.begin();cit!=cannon.end();cit++)
+    {
+        bounding_box_t temp;
+        temp.height =2*cit->radius;
+        temp.width = 2*cit->radius;
+        temp.depth = 2*cit->radius;
+        temp.x = cit->position.x;
+        temp.y = cit->position.y;
+        temp.z = cit->position.z;
+        if(detect_collision(airplane_box,temp)){
+            airforce.health--;
+            system("aplay sound/collision.wav &");
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                respawn();
+                cannon.erase(cit);
+                cit--;
+            }
+        }
+        else{
+            cit->move();
+            cit->draw(VP);
+        }
+    }
+}
+void draw_dashboard(glm::mat4 VPScore){
+    dash_fuel.draw(VPScore);
+    dash_stick_fuel.draw(VPScore);
+    dash_altitude.draw(VPScore);
+    dash_stick_altitude.curr_value = airforce.position.y+4;
+    dash_stick_altitude.draw(VPScore);
+    compass.draw(VPScore);
+    compstick.draw(VPScore);
+    display_score(VPScore);
+}
+void destroy_checkpoint(glm::mat4 VP){
+    vector<Bomb>::iterator bit;
+   for(bit=bomb.begin();bit!=bomb.end();bit++){
+       bounding_box_t temp;
+        temp.height = 2*bit->height;
+        temp.width = 2*bit->width;
+        temp.depth = 2*bit->depth;
+        temp.x = bit->position.x;
+        temp.y = bit->position.y;
+        temp.z = bit->position.z;
+       if(detect_collision(shoot_box,temp)){
+           spawnx = checkpoint[0].x;
+           spawny = checkpoint[0].y;
+           spawnz = checkpoint[0].z;
+           
+           cannon_interval /= 2;
+           check_count =0;
+
+            para_count =0;
+            para_interval /=2;
+
+            fuel_count=0;
+            fuel_interval *=2;
+
+           cannon.clear();
+           checkpoint.erase(checkpoint.begin());
+           shoot.erase(shoot.begin());
+           mount.erase(mount.begin());
+           island.erase(island.begin());
+           checkp+=1;
+           airforce.score += 100;
+           cout<<"Collision"<<endl;
+           if(checkpoint.empty()){
+               cout<<"Game Over"<<endl;
+               quit(window);
+           }
+           arrow.set_position(checkpoint[0].x,checkpoint[0].y+5,checkpoint[0].z);
+           //bomb.clear();
+           continue;
+       }if(temp.y < -5){
+           bomb.erase(bit);
+           bit--;
+           continue;
+       }
+       bit->fall_down();
+       bit->draw(VP);
+   }
 }
 void draw() {
     // clear the color and depth in the frame buffer
@@ -245,34 +463,8 @@ void draw() {
     airplane_box.x = airforce.position.x;
     airplane_box.y = airforce.position.y;
     airplane_box.z = airforce.position.z;
-    vector<Cannon>::iterator cit;
-    for(cit = cannon.begin();cit!=cannon.end();cit++)
-    {
-        bounding_box_t temp;
-        temp.height =2*cit->radius;
-        temp.width = 2*cit->radius;
-        temp.depth = 2*cit->radius;
-        temp.x = cit->position.x;
-        temp.y = cit->position.y;
-        temp.z = cit->position.z;
-        if(detect_collision(airplane_box,temp)){
-            airforce.health--;
-            if(airforce.health==0){
-                cout<<"Kill"<<endl;
-                quit(window);
-            }
-            else{
-                airforce.set_position(0,0.5594,0.2999);
-                cannon.erase(cit);
-                cit--;
-            }
-        }
-        else{
-            cit->move();
-            cit->draw(VP);
-        }
-    }
     
+    collision_cannon(VP);
     vector<Fuel>::iterator fit;
     for(fit=fuel.begin();fit!=fuel.end();fit++)
     {
@@ -287,16 +479,26 @@ void draw() {
         {
             fuel.erase(fit);
             fit--;
-            airforce.fuel += 5;
+            if(airforce.fuel <750){
+                airforce.fuel += 250;
+            }else{
+                airforce.fuel =1000;
+            }
             continue;
         }
         fit->draw(VP);
     }
     collision_ring();
+    smoke_count++;
+    if(smoke_count>smoke_interval){
+        generate_ring();
+        smoke_count=0;
+    }
     for(int i=0;i<smoke.size();i++)
     {
         smoke[i].draw(VP);
     }
+    
     glm::vec4 temp_speed = airforce.set_speed(speed);
     speed.x = temp_speed.x;
     speed.y = temp_speed.y;
@@ -307,7 +509,7 @@ void draw() {
     speed.y = (speed.y/unit) ;
     speed.z = (speed.z/unit) ;
     
-    airforce.draw(VP);
+    
     vector<Parachute>::iterator pit;
     for(pit=para.begin();pit!=para.end();pit++)
     {
@@ -326,18 +528,26 @@ void draw() {
         }
         if(detect_collision(temp,airplane_box)){
             airforce.health--;
+            system("aplay sound/collision.wav &");
             if(airforce.health==0){
                 cout<<"Kill"<<endl;
                 quit(window);
             }
             else{
-                airforce.set_position(0,0.5594,0.2999);
+                respawn();
             }
             
         }
-        //pit->fall_down();
+        pit->fall_down();
         pit->draw(VP);
     }
+    
+    shoot_box.height = shoot[0].height;
+    shoot_box.width = 2*shoot[0].radius;
+    shoot_box.depth = 2*shoot[0].radius;
+    shoot_box.x = shoot[0].position.x;
+    shoot_box.y = shoot[0].position.y;
+    shoot_box.z = shoot[0].position.z;
     vector<Missile>::iterator mit;
     for(mit=missile.begin();mit!=missile.end();mit++){
             mit->move_forward();
@@ -365,6 +575,7 @@ void draw() {
                     para.erase(pit);
                     pit--;
                     flag=0;
+                    airforce.score += 50;
                     break;
                 }
             }
@@ -386,25 +597,96 @@ void draw() {
                 mit->draw(VP);
             }
             //cout<<missile.size()<<endl;
-    
+    destroy_checkpoint(VP);  
+    check_count++;
+    if(check_count>cannon_interval){
+        glm::vec3 dir;
+        dir = glm::vec3(airforce.position.x - shoot[0].position.x,airforce.position.y - shoot[0].position.y,airforce.position.z - shoot[0].position.z);
+        float mag = sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+        dir.x /= mag;
+        dir.y /= mag;
+        dir.z /= mag;
+        cannon.push_back(Cannon(shoot[0].position.x,shoot[0].position.y,shoot[0].position.z,dir));
+        check_count=0;
+    }
 
-   vector<Bomb>::iterator bit;
-   for(bit=bomb.begin();bit!=bomb.end();bit++){
-       bit->fall_down();
-       bit->draw(VP);
-   }
 
-    dash_fuel.draw(VPScore);
-    dash_stick_fuel.draw(VPScore);
-    dash_altitude.draw(VPScore);
-    dash_stick_altitude.curr_value = airforce.position.y+4;
-    //cout<<dash_stick_altitude.curr_value<<endl;
-    dash_stick_altitude.draw(VPScore);
-    compass.draw(VPScore);
-    compstick.draw(VPScore);
-    
+    para_count++;
+    if(para_count>para_interval){
+        double u = GenerateRandom(-15,15);
+        double v = GenerateRandom(2,17*sqrt(3));
+        if(para.size()<10){
+            para.push_back(Parachute(u,8,v));
+        }
+        para_count=0;
+    }
+    fuel_count++;
+    if(fuel_count>fuel_interval){
+        double u = GenerateRandom(-15,15);
+        double v = GenerateRandom(2,17*sqrt(3));
+        double w = GenerateRandom(2,4);
+        if(fuel.size()<3){
+            fuel.push_back(Fuel(u,w,v));
+        }
+        fuel_count=0;
+    }
+    fuel_loss++;
+    if(fuel_loss%100==0){
+        airforce.fuel -= 0.001;
+    }
+    if(airforce.fuel<0){
+        airforce.fuel=0;
+    }
+    Lava.draw(VP);
+    Volcano.draw(VP);
+    float bx = Volcano.position.x - airforce.position.x;
+    float by = Volcano.position.y - airforce.position.y;
+    float bz = Volcano.position.z - airforce.position.z;
+    float boundary = sqrt(bx*bx+by*by+bz*bz);
+    if(boundary < 7){
+        airforce.health--;
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                respawn();
+                
+            }
+        airforce.type=2;
+    }
+    else if(boundary < 10){
+        airforce.type =2;
+    }
+    else{
+        airforce.type =1;
+    }
+    if(airforce.fuel == 0){
+        airforce.health--;
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                respawn();
+                
+            }
+    }
+    if(airforce.position.y < -4.5){
+        airforce.health--;
+            if(airforce.health==0){
+                cout<<"Kill"<<endl;
+                quit(window);
+            }
+            else{
+                respawn();
+                
+            }
+    }
+    airforce.draw(VP);
+    dash_stick_fuel.curr_value =airforce.fuel;
+    draw_dashboard(VPScore);
     airforce.reset_rotation();
-    
 }
 
 void tick_input(GLFWwindow *window) {
@@ -429,29 +711,35 @@ void tick_input(GLFWwindow *window) {
     int t = glfwGetKey(window, GLFW_KEY_3);
     int u = glfwGetKey(window, GLFW_KEY_4);
     int f = glfwGetKey(window, GLFW_KEY_F);
-    int h = glfwGetKey(window, GLFW_KEY_H);
-    int m = glfwGetKey(window, GLFW_KEY_M);
+    int h = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    //int m = glfwGetKey(window, GLFW_KEY_M);
+    int m = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     int n = glfwGetKey(window, GLFW_KEY_5);
     if (left) {
+       //system("aplay sound/airplanes.wav &");
        airforce.move_left();
        compstick.rotation += 0.60;
     }
     if (right) {
+      //system("aplay sound/airplanes.wav &");
       airforce.move_right();
       compstick.rotation -= 0.60;
     }
     if (up) {
+       airforce.fuel -= 0.5;
        airforce.position.x += speed.x*airforce.speed;
        airforce.position.y += speed.y*airforce.speed;
        airforce.position.z += speed.z*airforce.speed;
     }
     if (down) {
+       system("aplay sound/airplanes.wav &"); 
        airforce.fall();
        //if(airforce)
        airforce.dive_down();
        
     }
     if(space){
+        system("aplay sound/airplanes.wav &");
         if(airforce.position.y < 16){
             airforce.lift();
             airforce.dive_up();
@@ -531,11 +819,7 @@ void tick_input(GLFWwindow *window) {
         camera_flag = 4;
     }
     if(n){
-        // e1=0;
-        // e2=0;
-        // e3=4*airforce.radius;
-        // tz = e3 + 0.01;
-        // 
+        
         camera_flag = 5;
     }
     if(h){
@@ -562,8 +846,11 @@ void initGL(GLFWwindow *window, int width, int height) {
     epy = 0;
     epz = -1.49;
     speed = glm::vec4(0,0,0.05,1);
-
+    spawnx =0;
+    spawny = 0.5594;
+    spawnz = 0.2999;
     airforce = Airplane(0,0.5594,0.2999);
+    airforce.fuel=1000;
     airplane_box.depth = airforce.radius*6;
     airplane_box.height = 2*airforce.radius;
     airplane_box.width = 2*airforce.radius;
@@ -571,33 +858,30 @@ void initGL(GLFWwindow *window, int width, int height) {
     create_checkpoint();
     vector<checkcoords>::iterator chit;
     for(chit=checkpoint.begin();chit!=checkpoint.end();chit++){
-        mount.push_back(Mountain(chit->x,chit->y-5,chit->z,2,0.5));
+        mount.push_back(Mountain(chit->x,chit->y-5,chit->z,2,0.5,1));
         shoot.push_back(Shooter(chit->x,chit->y-3,chit->z,2,1.5));
         island.push_back(Island(chit->x,chit->y-5-0.01,chit->z,5));
     }
     arrow = Arrow(checkpoint[0].x,checkpoint[0].y+5,checkpoint[0].z);
     smoke.push_back(Rings(0,5,3,10,0.05));
     
+    Volcano = Mountain(0,0.02-5,7*sqrt(3),3,0.25,2);
+    Lava = Island(0,0.01-5,7*sqrt(3),4);
+    
     dash_fuel = Dashboard(-3,-3,1,2);
-    dash_stick_fuel = Dashsticks(-3,-3,dash_fuel.radius_rx,100,2);
+    dash_stick_fuel = Dashsticks(-3,-3,dash_fuel.radius_rx,1000,2);
     dash_altitude =  Dashboard(3,-3,1,1);
     dash_stick_altitude = Dashsticks(3,-3,dash_altitude.radius_rx,20,1);
-    compass =Compass(0,-3,1);
-    compstick = Compsticks(0,-3,0.4);
-    //fuel.push_back(Fuel(3,3,3));
+    compass =Compass(3,1,1);
+    compstick = Compsticks(3,1,0.4);
     para.push_back(Parachute(3,3,3));
+    seg_ones = Segment(3.2,3.6,0,screen_zoom);
+    seg_tens = Segment(2.8,3.6,0,screen_zoom);
+    seg_hs = Segment(2.4,3.6,0,screen_zoom);
+    seg_st = Segment(-3,3.6,1,screen_zoom);
+    seg_life = Segment(-2,3.6,2,screen_zoom);
     
-    cannon.push_back(Cannon(shoot[0].position.x,shoot[0].position.y,shoot[0].position.z));
-    glm::vec3 dir;
-    dir = glm::vec3(airforce.position.x - shoot[0].position.x,airforce.position.y - shoot[0].position.y,airforce.position.z - shoot[0].position.z);
-    float mag = sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
-    dir.x /= mag;
-    dir.y /= mag;
-    dir.z /= mag;
-    cannon[0].set_dir(dir);
-    // for(int i=0;i<5;i++){
-    //     mount.push_back(Mountain(2*i,0,4));
-    // }
+    
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
     // Get a handle for our "MVP" uniform
@@ -635,6 +919,7 @@ int main(int argc, char **argv) {
             // 60 fps
             // OpenGL Draw commands
             draw();
+            //system("aplay sound/jet.wav &");
             // Swap Frame Buffer in double buffering
             glfwSwapBuffers(window);
 
@@ -670,5 +955,5 @@ void reset_screen() {
         Matrices.projection = glm::perspective(initialFoV, 1.0f, 1.0f, 500.0f);
     }
     MatricesDashboard.projection = glm::ortho(left, right, bottom, top, 0.1f, 500.0f);
-    MatricesArrow.projection = glm::perspective(90.0f, 1.0f, 1.0f, 500.0f);
+    
 }

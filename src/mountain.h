@@ -7,7 +7,7 @@
 class Mountain {
 public:
     Mountain() {}
-    Mountain(float x, float y,float z,float r1,float h);
+    Mountain(float x, float y,float z,float r1,float h,int type);
     glm::vec3 position;
     float rotation;
     void draw(glm::mat4 VP);
